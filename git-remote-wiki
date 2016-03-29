@@ -42,12 +42,9 @@ config = {}
 
 def capabilities(line):
     logging.debug("printing capabilites")
-    gitmarks = os.path.join(config["git_dir"], "wiki", config["alias"])
     print("import")
     print("export")
     print("refspec refs/heads/*:refs/wiki/%s/*" % config["alias"])
-    print("*import-marks %s" % gitmarks)
-    print("*export-marks %s" % gitmarks)
     print()
     sys.stdout.flush()
 
@@ -59,15 +56,11 @@ def do_list(line):
     print()
     sys.stdout.flush()
 
-def touch(f):
-    f = open(f, "a")
-    f.close()
-        
 
 def do_import(line):
     ref = line.split()[1]
     logging.debug("do_import %s", ref)
-    data = """commit refs/mediawiki/origin/master
+    data = """commit refs/heads/wiki/origin
 mark :1
 committer MediaWiki default <MediaWiki default@172.17.0.6/> 1459091498 +0000
 data 25
@@ -92,7 +85,7 @@ Note added by git-mediawiki during importN inline :1
 data 21
 mediawiki_revision: 1
 
-commit refs/mediawiki/origin/master
+commit refs/heads/wiki/origin
 mark :2
 committer 172.17.0.1 <172.17.0.1@172.17.0.6/> 1459091721 +0000
 data 38
