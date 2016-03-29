@@ -10,3 +10,8 @@ Note that there's already a mediawiki git remote helper which works well if
 your wiki is suitably configured - it needs api.php enabled. Since several of
 the wikis I'd like to scrape are either not configured that way, or else use
 another wiki system, such as confluence, I started this project.
+
+Useful links:
+https://www.kernel.org/pub/software/scm/git/docs/gitremote-helpers.html
+
+https://rovaughn.github.io/2015-2-9.html
