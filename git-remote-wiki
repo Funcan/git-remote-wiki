@@ -111,6 +111,7 @@ mediawiki_revision: 2
 done
 """
     print(data)
+    sys.stdout.flush()
 
 
 commands = {
