@@ -1,0 +1,161 @@
+#!/usr/bin/env python
+
+from __future__ import print_function
+
+import logging
+import os
+import subprocess
+import sys
+import time
+
+
+
+class FileInput(object):
+    def __init__(self, file):
+        self.file = file
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *args, **kwargs):
+        self.file.close()
+
+    def __iter__(self):
+        return self
+
+    def next(self):
+        logging.debug("Reading a new command from stdin")
+        line = ""
+
+        c = sys.stdin.read(1)
+        while c != "\n":
+            line += c
+            #logging.debug("c = %s (%s)", c, ord(c))
+            c = sys.stdin.read(1)
+
+        if line == None or line == "":
+            raise StopIteration
+
+        return line
+
+config = {}
+
+def capabilities(line):
+    logging.debug("printing capabilites")
+    gitmarks = os.path.join(config["git_dir"], "wiki", config["alias"])
+    print("import")
+    print("export")
+    print("refspec refs/heads/*:refs/wiki/%s/*" % config["alias"])
+    print("*import-marks %s" % gitmarks)
+    print("*export-marks %s" % gitmarks)
+    print()
+    sys.stdout.flush()
+
+
+def do_list(line):
+    logging.debug("printing list")
+    print("? refs/heads/master")
+    print("@refs/heads/master HEAD")
+    print()
+    sys.stdout.flush()
+
+def touch(f):
+    f = open(f, "a")
+    f.close()
+        
+
+def do_import(line):
+    ref = line.split()[1]
+    logging.debug("do_import %s", ref)
+    data = """commit refs/mediawiki/origin/master
+mark :1
+committer MediaWiki default <MediaWiki default@172.17.0.6/> 1459091498 +0000
+data 25
+*Empty MediaWiki Message*M 644 inline "Main_Page.mw"
+data 593
+<strong>MediaWiki has been successfully installed.</strong>
+
+Consult the [//meta.wikimedia.org/wiki/Help:Contents User's Guide] for information on using the wiki software.
+
+== Getting started ==
+* [//www.mediawiki.org/wiki/Special:MyLanguage/Manual:Configuration_settings Configuration settings list]
+* [//www.mediawiki.org/wiki/Special:MyLanguage/Manual:FAQ MediaWiki FAQ]
+* [https://lists.wikimedia.org/mailman/listinfo/mediawiki-announce MediaWiki release mailing list]
+* [//www.mediawiki.org/wiki/Special:MyLanguage/Localisation#Translation_resources Localise MediaWiki for your language]
+
+
+reset refs/notes/origin/mediawiki
+commit refs/notes/origin/mediawiki
+committer MediaWiki default <MediaWiki default@172.17.0.6/> 1459091498 +0000
+data 41
+Note added by git-mediawiki during importN inline :1
+data 21
+mediawiki_revision: 1
+
+commit refs/mediawiki/origin/master
+mark :2
+committer 172.17.0.1 <172.17.0.1@172.17.0.6/> 1459091721 +0000
+data 38
+Created page with "This is a new page"M 644 inline "Newpage.mw"
+data 19
+This is a new page
+
+
+commit refs/notes/origin/mediawiki
+committer 172.17.0.1 <172.17.0.1@172.17.0.6/> 1459091721 +0000
+data 41
+Note added by git-mediawiki during importN inline :2
+data 21
+mediawiki_revision: 2
+
+done
+"""
+    print(data)
+
+
+commands = {
+    "capabilities": capabilities,
+    "list": do_list,
+    "import": do_import,
+}
+
+
+def main(*args, **kwargs):
+    global config
+    logging.debug("Args: %s", " ".join(args))
+
+    if args[1].startswith("wiki:"):
+        alias = ""
+        url = args[1]
+    else:
+        alias = args[1]
+        url = args[2]
+
+    path = "://".join(url.split("://")[1:])
+
+    logging.debug("Path = %s", path)
+
+    git_dir = os.environ["GIT_DIR"]
+    logging.debug("GIT_DIR = %s", git_dir)
+
+    config["url"] = url
+    config["alias"] = alias
+    config["path"] = path
+    config["git_dir"] = git_dir
+
+    with FileInput(sys.stdin) as f:
+        for line in f:
+            command = line.split()[0]
+            if command in commands:
+                logging.debug("Executing command %s", command)
+                commands[command](line)
+            else:
+                logging.debug("Unknown or unimplemented command %s", line)
+
+
+if __name__ == "__main__":
+    logging.basicConfig(filename='git-wiki.log',level=logging.DEBUG)
+
+    args = sys.argv
+    main(*args)
+    #time.sleep(360)
