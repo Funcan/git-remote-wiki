@@ -15,3 +15,5 @@ Useful links:
 https://www.kernel.org/pub/software/scm/git/docs/gitremote-helpers.html
 
 https://rovaughn.github.io/2015-2-9.html
+
+An existing mediawiki git remote helper: https://github.com/moy/Git-Mediawiki/wiki
